@@ -1,5 +1,6 @@
 const express = require('express');
 const ExpressError = require('./expressError')
+const { createErrStr, createQueryArr, findMean, findMedian, findMode } = require('./helpers')
 const app = express();
 
 app.use(express.json());
@@ -17,52 +18,97 @@ app.get('/mean', (req, res, next) => {
         next(error)
     }
 
-    let numsQuery = req.query.nums;
-    let nums = numsQuery.split(',');
-    let errors = ''
-
-    nums.forEach((num) => {
-        // console.log(typeof (num), Number(num))
-        if (Number(num) == NaN) {
-            // console.log(num)
-            if (errors == '') {
-                errors += num
-            } else {
-                errors += ', and ';
-                errors += num
-            }
-        }
-        // console.log('xxxxxxxxxx', errors)
-    })
-
-    // console.log('********', numsQuery)
-    // console.log('!!!!!!!!!!', nums)
-    // console.log('xxxxxxxxxx', errors)
+    let numsArr = createQueryArr(req.query.nums)
+    let errorString = createErrStr(numsArr)
 
     try {
-        if (errors.length != 0) {
+        if (errorString.length != 0) {
+            errRes = ''
+            if (errorString.includes(',')) {
+                errRes = ' are not numbers.'
+            } else { errRes = ' is not a number.' }
+            throw new ExpressError(`${errorString}${errRes}`, 400)
+        }
+    } catch (error) {
+        next(error)
+    }
+
+    return res.json(
+        {
+            response: {
+                operation: "mean",
+                value: findMean(numsArr)
+            }
+        })
+});
+
+app.get('/median', (req, res, next) => {
+    try {
+        if (!req.query.nums) {
             throw new ExpressError("Numbers are required", 400)
         }
     } catch (error) {
         next(error)
     }
 
-    let mean = 0;
+    let numsArr = createQueryArr(req.query.nums)
+    let errorString = createErrStr(numsArr)
 
-    for (let i = 0; i < nums.length; i++) {
-        mean += nums[i]
+    try {
+        if (errorString.length != 0) {
+            errRes = ''
+            if (errorString.includes(',')) {
+                errRes = ' are not numbers.'
+            } else { errRes = ' is not a number.' }
+            throw new ExpressError(`${errorString}${errRes}`, 400)
+        }
+    } catch (error) {
+        next(error)
     }
-
-    let valueNum = mean / nums.length
 
     return res.json(
         {
             response: {
-                operation: "mean",
-                value: valueNum
+                operation: "median",
+                value: findMedian(numsArr)
             }
         })
 });
+
+app.get('/mode', (req, res, next) => {
+    try {
+        if (!req.query.nums) {
+            throw new ExpressError("Numbers are required", 400)
+        }
+    } catch (error) {
+        next(error)
+    }
+
+    let numsArr = createQueryArr(req.query.nums)
+    let errorString = createErrStr(numsArr)
+
+    try {
+        if (errorString.length != 0) {
+            errRes = ''
+            if (errorString.includes(',')) {
+                errRes = ' are not numbers.'
+            } else { errRes = ' is not a number.' }
+            throw new ExpressError(`${errorString}${errRes}`, 400)
+        }
+    } catch (error) {
+        next(error)
+    }
+
+    return res.json(
+        {
+            response: {
+                operation: "mode",
+                value: findMode(numsArr)
+            }
+        })
+});
+
+
 
 app.use((error, req, res, next) => {
     res.status(error.status).send(error.msg)
